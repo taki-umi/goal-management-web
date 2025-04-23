@@ -10,6 +10,8 @@ interface GoalCardProps {
 }
 
 export default function GoalCard({ goal }: GoalCardProps) {
+    console.log("goal: ", goal);
+    console.log("goalId: ", goal.id);
     // ステータスに応じたバッジの色を決定
     const getBadgeColor = () => {
         switch (goal.status) {

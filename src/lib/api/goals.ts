@@ -24,7 +24,7 @@ export const goalApi = {
     getGoalsByUserIdAndStatus: async (userId: string, status: GoalStatus): Promise<Goal[]> => {
         try {
             const response = await apiClient.get<Goal[]>(`/goals?userId=${userId}&status=${status}`);
-            return response.data;
+            return response.data.map(convertFromApiToGoal);
         } catch (error) {
             console.error('ゴール一覧取得エラー:', error);
             throw error;
@@ -35,7 +35,7 @@ export const goalApi = {
     getGoalById: async (id: string): Promise<Goal> => {
         try {
             const response = await apiClient.get<Goal>(`/goals/${id}`);
-            return response.data;
+            return convertFromApiToGoal(response.data);
         } catch (error) {
             console.error('ゴール取得エラー:', error);
             throw error;
@@ -46,7 +46,7 @@ export const goalApi = {
     createGoal: async (goalData: CreateGoalParams): Promise<Goal> => {
         try {
             const response = await apiClient.post<Goal>('/goals', goalData);
-            return response.data;
+            return convertFromApiToGoal(response.data);
         } catch (error) {
             console.error('ゴール作成エラー:', error);
             throw error;
@@ -57,7 +57,7 @@ export const goalApi = {
     updateGoal: async (id: string, goalData: UpdateGoalParams): Promise<Goal> => {
         try {
             const response = await apiClient.put<Goal>(`/goals/${id}`, goalData);
-            return response.data;
+            return convertFromApiToGoal(response.data);
         } catch (error) {
             console.error('ゴール更新エラー:', error);
             throw error;
@@ -68,7 +68,7 @@ export const goalApi = {
     updateProgress: async (id: string, params: UpdateProgressParams): Promise<Goal> => {
         try {
             const response = await apiClient.patch<Goal>(`/goals/${id}/progress?progress=${params.progress}`);
-            return response.data;
+            return convertFromApiToGoal(response.data);
         } catch (error) {
             console.error('進捗更新エラー:', error);
             throw error;
@@ -79,7 +79,7 @@ export const goalApi = {
     archiveGoal: async (id: string): Promise<Goal> => {
         try {
             const response = await apiClient.patch<Goal>(`/goals/${id}/archive`);
-            return response.data;
+            return convertFromApiToGoal(response.data);
         } catch (error) {
             console.error('ゴールアーカイブエラー:', error);
             throw error;
@@ -100,7 +100,7 @@ export const goalApi = {
     getSubGoals: async (parentGoalId: string): Promise<Goal[]> => {
         try {
             const response = await apiClient.get<Goal[]>(`/goals/parent/${parentGoalId}`);
-            return response.data;
+            return response.data.map(convertFromApiToGoal);
         } catch (error) {
             console.error('サブゴール一覧取得エラー:', error);
             throw error;
@@ -111,7 +111,7 @@ export const goalApi = {
     getRecommendedGoals: async (userId: string, limit: number = 5): Promise<Goal[]> => {
         try {
             const response = await apiClient.get<Goal[]>(`/goals/recommended?userId=${userId}&limit=${limit}`);
-            return response.data;
+            return response.data.map(convertFromApiToGoal);
         } catch (error) {
             console.error('おすすめゴール取得エラー:', error);
             throw error;
@@ -122,7 +122,7 @@ export const goalApi = {
     getUpcomingGoals: async (userId: string, daysAhead: number = 7): Promise<Goal[]> => {
         try {
             const response = await apiClient.get<Goal[]>(`/goals/upcoming?userId=${userId}&daysAhead=${daysAhead}`);
-            return response.data;
+            return response.data.map(convertFromApiToGoal);
         } catch (error) {
             console.error('期限が近いゴール取得エラー:', error);
             throw error;

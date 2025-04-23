@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { User } from '@/types/auth';
-import { log } from 'console';
+import { getApiErrorMessage } from '@/lib/errorUtils';
 
 // APIのベースURL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:9090/api';
@@ -11,6 +11,7 @@ const apiClient = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    timeout: 10000, // 10秒でタイムアウト
 });
 
 // ユーザー情報取得
@@ -31,9 +32,20 @@ apiClient.interceptors.request.use(
             config.headers['X-User-ID'] = user.id;
             config.headers['X-Username'] = user.username;
         }
+
+        // 開発用にリクエスト内容をログ出力
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
+                headers: config.headers,
+                data: config.data,
+                params: config.params
+            });
+        }
+
         return config;
     },
     (error) => {
+        console.error('APIリクエストエラー:', error);
         return Promise.reject(error);
     }
 );
@@ -41,10 +53,26 @@ apiClient.interceptors.request.use(
 // レスポンスインターセプター
 apiClient.interceptors.response.use(
     (response) => {
+        // 開発用にレスポンス内容をログ出力
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`, {
+                status: response.status,
+                data: response.data
+            });
+        }
+
         return response;
     },
-    (error) => {
-        console.log(error);
+    (error: AxiosError) => {
+        // エラー内容をログ出力
+        if (process.env.NODE_ENV === 'development') {
+            console.error(`❌ API Error: ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
+                status: error.response?.status,
+                data: error.response?.data,
+                error: getApiErrorMessage(error)
+            });
+        }
+
         if (error.response) {
             // レスポンスありのエラー
             switch (error.response.status) {
@@ -57,16 +85,9 @@ apiClient.interceptors.response.use(
                 case 403: // 権限エラー
                     console.error('アクセス権限がありません');
                     break;
-                default:
-                    console.error('APIエラー:', error.response.data);
             }
-        } else if (error.request) {
-            // レスポンスなしのエラー
-            console.error('サーバーに接続できません');
-        } else {
-            // リクエスト設定時のエラー
-            console.error('リクエストエラー:', error.message);
         }
+
         return Promise.reject(error);
     }
 );
