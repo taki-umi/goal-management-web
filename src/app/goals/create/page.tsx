@@ -1,69 +1,69 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { CreateGoalParams } from '@/types/goal';
 import { goalApi } from '@/lib/api/goals';
+import { CreateGoalParams } from '@/types/goal';
 import GoalForm from '@/components/goals/GoalForm';
+import Header from '@/components/layout/Header';
+
+import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Box from '@mui/material/Box';
 
 export default function CreateGoalPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    const { user, isAuthenticated } = useAuth();
+    const { user } = useAuth();
     const router = useRouter();
 
-    // 認証チェック
-    useEffect(() => {
-        if (!isAuthenticated()) {
-            router.push('/login');
-        }
-    }, [isAuthenticated, router]);
-
-    // ゴール作成処理
-    const handleCreateGoal = async (goalData: CreateGoalParams) => {
+    const handleSubmit = async (goalData: CreateGoalParams) => {
         try {
             setIsLoading(true);
             setError(null);
-
-            // ゴールを作成
             await goalApi.createGoal(goalData);
-
-            // 成功したらダッシュボードに戻る
-            router.push('/');
+            router.push('/'); // 成功したらダッシュボードにリダイレクト
         } catch (err) {
             console.error('ゴール作成エラー:', err);
-            setError('ゴールの作成中にエラーが発生しました。');
+            setError('ゴールの作成に失敗しました。');
         } finally {
             setIsLoading(false);
         }
     };
 
-    // 未認証の場合は何も表示しない（useEffectでリダイレクト）
-    if (!isAuthenticated() || !user) {
-        return null;
+    if (!user) {
+        // ユーザーがいない場合はログインページにリダイレクトするなどの処理も考えられる
+        return (
+            <Box>
+                <Header />
+                <Container maxWidth="sm" sx={{ mt: 4 }}>
+                    <Typography variant="h5" align="center">アクセスするにはログインが必要です。</Typography>
+                </Container>
+            </Box>
+        );
     }
 
     return (
-        <div className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
-            <div className="px-4 py-6 sm:px-0">
-                <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-gray-900">新しいゴールを作成</h1>
-                    <p className="mt-1 text-sm text-gray-500">
-                        あなたが達成したい目標を設定しましょう
-                    </p>
-                </div>
-
-                <div className="bg-white shadow rounded-lg p-6">
-                    <GoalForm
-                        userId={user.id}
-                        onSubmit={handleCreateGoal}
-                        isLoading={isLoading}
-                        error={error}
-                    />
-                </div>
-            </div>
-        </div>
+        <Box>
+            <Header />
+            <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+                <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
+                    新しいゴールを作成
+                </Typography>
+                <Card sx={{ mt: 3 }}>
+                    <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+                        <GoalForm
+                            userId={user.id}
+                            onSubmit={handleSubmit}
+                            isLoading={isLoading}
+                            error={error}
+                        />
+                    </CardContent>
+                </Card>
+            </Container>
+        </Box>
     );
 }

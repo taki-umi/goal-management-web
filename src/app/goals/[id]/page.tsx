@@ -1,15 +1,35 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { Goal, UpdateGoalParams, UpdateProgressParams } from '@/types/goal';
+import { Goal, UpdateGoalParams } from '@/types/goal';
 import { goalApi } from '@/lib/api/goals';
 import ProgressBar from '@/components/goals/ProgressBar';
-import Link from 'next/link';
 import GoalList from '@/components/goals/GoalList';
 import { formatDate } from '@/lib/utils';
-import { use } from 'react';
+import {
+    Container,
+    Box,
+    Typography,
+    Paper,
+    Grid,
+    Button,
+    TextField,
+    Select,
+    MenuItem,
+    CircularProgress,
+    Alert,
+    Link as MuiLink,
+    Chip,
+    Slider,
+    FormControl,
+    InputLabel,
+    SelectChangeEvent,
+} from '@mui/material';
+import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+
 
 interface GoalDetailPageProps {
     params: Promise<{
@@ -31,9 +51,7 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
     const { isAuthenticated } = useAuth();
     const router = useRouter();
     const { id: goalId } = use(params);
-    console.log("goalId: ", goalId);
 
-    // 認証チェックとゴール情報の取得
     useEffect(() => {
         if (!isAuthenticated()) {
             router.push('/login');
@@ -44,14 +62,9 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
             try {
                 setLoading(true);
                 setError(null);
-
-                // 選択したゴールの情報を取得
                 const goalData = await goalApi.getGoalById(goalId);
-                console.log("goalData: ", goalData);
                 setGoal(goalData);
                 setProgressValue(goalData.progress);
-
-                // サブゴールの情報を取得
                 const subGoalsData = await goalApi.getSubGoals(goalId);
                 setSubGoals(subGoalsData);
             } catch (err) {
@@ -65,20 +78,21 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
         fetchGoalDetails();
     }, [isAuthenticated, router, goalId]);
 
-    // 編集フォームの値を更新
-    const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setEditedGoal(prev => ({ ...prev, [name]: value }));
     };
 
-    // 編集モードの切り替え
+    const handleStatusChange = (event: SelectChangeEvent<string>) => {
+        setEditedGoal(prev => ({ ...prev, status: event.target.value }));
+    };
+
+
     const toggleEditMode = () => {
         if (isEditing) {
-            // 編集モードを終了
             setIsEditing(false);
             setEditedGoal({});
         } else {
-            // 編集モードを開始（現在の値をフォームに設定）
             setIsEditing(true);
             setEditedGoal({
                 title: goal?.title,
@@ -90,17 +104,12 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
         }
     };
 
-    // ゴール更新処理
     const handleUpdateGoal = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if (!goal) return;
-
         try {
             setLoading(true);
             setError(null);
-
-            // ゴールを更新
             const updatedGoal = await goalApi.updateGoal(goalId, editedGoal);
             setGoal(updatedGoal);
             setIsEditing(false);
@@ -112,15 +121,11 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
         }
     };
 
-    // 進捗更新処理
     const handleUpdateProgress = async () => {
         if (!goal) return;
-
         try {
             setIsUpdatingProgress(true);
             setError(null);
-
-            // 進捗を更新
             const updatedGoal = await goalApi.updateProgress(goalId, { progress: progressValue });
             setGoal(updatedGoal);
         } catch (err) {
@@ -131,15 +136,11 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
         }
     };
 
-    // ゴールアーカイブ処理
     const handleArchiveGoal = async () => {
         if (!goal) return;
-
         try {
             setLoading(true);
             setError(null);
-
-            // ゴールをアーカイブ
             const archivedGoal = await goalApi.archiveGoal(goalId);
             setGoal(archivedGoal);
         } catch (err) {
@@ -150,18 +151,12 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
         }
     };
 
-    // ゴール削除処理
     const handleDeleteGoal = async () => {
         if (!goal) return;
-
         try {
             setLoading(true);
             setError(null);
-
-            // ゴールを削除
             await goalApi.deleteGoal(goalId);
-
-            // ダッシュボードにリダイレクト
             router.push('/');
         } catch (err) {
             console.error('ゴール削除エラー:', err);
@@ -171,348 +166,254 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
         }
     };
 
-    // ステータスバッジの色を決定
-    const getStatusBadgeColor = (status: string) => {
+    const getStatusChipColor = (status: string): "success" | "primary" | "default" | "error" => {
         switch (status) {
-            case 'ACTIVE':
-                return 'bg-green-100 text-green-800';
-            case 'COMPLETED':
-                return 'bg-blue-100 text-blue-800';
-            case 'ARCHIVED':
-                return 'bg-gray-100 text-gray-800';
-            case 'DELETED':
-                return 'bg-red-100 text-red-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
+            case 'ACTIVE': return 'success';
+            case 'COMPLETED': return 'primary';
+            case 'ARCHIVED': return 'default';
+            case 'DELETED': return 'error';
+            default: return 'default';
         }
     };
 
-    // 認証されていない場合は何も表示しない
     if (!isAuthenticated()) {
         return null;
     }
 
     if (loading && !goal) {
         return (
-            <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                <div className="px-4 py-6 sm:px-0">
-                    <div className="flex items-center justify-center min-h-[50vh]">
-                        <p className="text-gray-500">ゴール情報を読み込み中...</p>
-                    </div>
-                </div>
-            </div>
+            <Container maxWidth="md" sx={{ py: 4 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+                    <CircularProgress />
+                    <Typography sx={{ ml: 2 }}>ゴール情報を読み込み中...</Typography>
+                </Box>
+            </Container>
         );
     }
 
     if (error && !goal) {
         return (
-            <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                <div className="px-4 py-6 sm:px-0">
-                    <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded">
-                        <div className="flex">
-                            <div className="flex-shrink-0">
-                                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                            <div className="ml-3">
-                                <p className="text-sm text-red-700">{error}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <Container maxWidth="md" sx={{ py: 4 }}>
+                <Alert severity="error">{error}</Alert>
+            </Container>
         );
     }
 
     if (!goal) {
         return (
-            <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                <div className="px-4 py-6 sm:px-0">
-                    <div className="flex items-center justify-center min-h-[50vh]">
-                        <p className="text-gray-500">ゴールが見つかりませんでした。</p>
-                    </div>
-                </div>
-            </div>
+            <Container maxWidth="md" sx={{ py: 4 }}>
+                <Alert severity="info">ゴールが見つかりませんでした。</Alert>
+            </Container>
         );
     }
 
     return (
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-            <div className="px-4 py-6 sm:px-0">
-                {/* エラーメッセージ */}
-                {error && (
-                    <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded mb-6">
-                        <div className="flex">
-                            <div className="flex-shrink-0">
-                                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                            <div className="ml-3">
-                                <p className="text-sm text-red-700">{error}</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
+        <Container maxWidth="md" sx={{ py: 4 }}>
+            {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-                {/* ナビゲーション */}
-                <div className="mb-6">
-                    <Link href="/" className="text-sm text-indigo-600 hover:text-indigo-500">
-                        ← ダッシュボードに戻る
-                    </Link>
-                </div>
+            <Box sx={{ mb: 3 }}>
+                <MuiLink component={Link} href="/" underline="hover" sx={{ display: 'flex', alignItems: 'center' }}>
+                    <ArrowBackIcon sx={{ mr: 0.5 }} />
+                    ダッシュボードに戻る
+                </MuiLink>
+            </Box>
 
-                {/* ゴール詳細 */}
-                <div className="bg-white shadow rounded-lg overflow-hidden">
-                    {/* ヘッダー */}
-                    <div className="px-6 py-5 border-b border-gray-200 bg-gray-50">
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-semibold text-gray-900">{goal.title}</h2>
-                            <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(goal.status)}`}>
-                                {goal.status}
-                            </span>
-                        </div>
-                    </div>
+            <Paper elevation={3} sx={{ overflow: 'hidden' }}>
+                <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="h4" component="h1" gutterBottom>
+                            {goal.title}
+                        </Typography>
+                        <Chip label={goal.status} color={getStatusChipColor(goal.status)} size="small" />
+                    </Box>
+                </Box>
 
-                    {/* 編集モード */}
-                    {isEditing ? (
-                        <div className="px-6 py-5">
-                            <form onSubmit={handleUpdateGoal}>
-                                <div className="grid grid-cols-1 gap-6">
-                                    <div>
-                                        <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                                            タイトル <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="title"
-                                            id="title"
-                                            required
-                                            value={editedGoal.title || ''}
-                                            onChange={handleEditChange}
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        />
-                                    </div>
+                {isEditing ? (
+                    <Box component="form" onSubmit={handleUpdateGoal} sx={{ p: 3 }}>
+                        <Grid container spacing={3}>
+                            <Grid item xs={12}>
+                                <TextField
+                                    fullWidth
+                                    required
+                                    label="タイトル"
+                                    name="title"
+                                    value={editedGoal.title || ''}
+                                    onChange={handleEditChange}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={4}
+                                    label="説明"
+                                    name="description"
+                                    value={editedGoal.description || ''}
+                                    onChange={handleEditChange}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    label="カテゴリー"
+                                    name="category"
+                                    value={editedGoal.category || ''}
+                                    onChange={handleEditChange}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    type="date"
+                                    label="目標日"
+                                    name="targetDate"
+                                    value={editedGoal.targetDate || ''}
+                                    onChange={handleEditChange}
+                                    InputLabelProps={{ shrink: true }}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <FormControl fullWidth>
+                                    <InputLabel>ステータス</InputLabel>
+                                    <Select
+                                        name="status"
+                                        value={editedGoal.status || goal.status}
+                                        label="ステータス"
+                                        onChange={handleStatusChange}
+                                    >
+                                        <MenuItem value="ACTIVE">進行中</MenuItem>
+                                        <MenuItem value="COMPLETED">完了</MenuItem>
+                                        <MenuItem value="ARCHIVED">アーカイブ済み</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                                <Button variant="outlined" onClick={toggleEditMode}>キャンセル</Button>
+                                <Button type="submit" variant="contained" disabled={loading}>
+                                    {loading ? <CircularProgress size={24} /> : '更新する'}
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </Box>
+                ) : (
+                    <>
+                        <Box sx={{ p: 3 }}>
+                            {goal.description && (
+                                <Box sx={{ mb: 3 }}>
+                                    <Typography variant="subtitle2" color="text.secondary">説明</Typography>
+                                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>{goal.description}</Typography>
+                                </Box>
+                            )}
 
-                                    <div>
-                                        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                                            説明
-                                        </label>
-                                        <textarea
-                                            id="description"
-                                            name="description"
-                                            rows={3}
-                                            value={editedGoal.description || ''}
-                                            onChange={handleEditChange}
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-                                            カテゴリー
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="category"
-                                            id="category"
-                                            value={editedGoal.category || ''}
-                                            onChange={handleEditChange}
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label htmlFor="targetDate" className="block text-sm font-medium text-gray-700">
-                                            目標日
-                                        </label>
-                                        <input
-                                            type="date"
-                                            name="targetDate"
-                                            id="targetDate"
-                                            value={editedGoal.targetDate || ''}
-                                            onChange={handleEditChange}
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                                            ステータス
-                                        </label>
-                                        <select
-                                            id="status"
-                                            name="status"
-                                            value={editedGoal.status || goal.status}
-                                            onChange={handleEditChange}
-                                            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                                        >
-                                            <option value="ACTIVE">進行中</option>
-                                            <option value="COMPLETED">完了</option>
-                                            <option value="ARCHIVED">アーカイブ済み</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="flex justify-end space-x-3">
-                                        <button
-                                            type="button"
-                                            onClick={toggleEditMode}
-                                            className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                        >
-                                            キャンセル
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            disabled={loading}
-                                            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                        >
-                                            更新する
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    ) : (
-                        <>
-                            {/* 詳細表示モード */}
-                            <div className="px-6 py-5">
-                                {goal.description && (
-                                    <div className="mb-4">
-                                        <h3 className="text-sm font-medium text-gray-500">説明</h3>
-                                        <p className="mt-1 text-base text-gray-900">{goal.description}</p>
-                                    </div>
+                            <Grid container spacing={2} sx={{ mb: 3 }}>
+                                {goal.category && (
+                                    <Grid item xs={12} sm={6}>
+                                        <Typography variant="subtitle2" color="text.secondary">カテゴリー</Typography>
+                                        <Typography variant="body1">{goal.category}</Typography>
+                                    </Grid>
                                 )}
+                                {goal.targetDate && (
+                                    <Grid item xs={12} sm={6}>
+                                        <Typography variant="subtitle2" color="text.secondary">目標日</Typography>
+                                        <Typography variant="body1">{formatDate(goal.targetDate)}</Typography>
+                                    </Grid>
+                                )}
+                                {goal.parentGoalId && (
+                                    <Grid item xs={12} sm={6}>
+                                        <Typography variant="subtitle2" color="text.secondary">親ゴール</Typography>
+                                        <MuiLink component={Link} href={`/goals/${goal.parentGoalId}`} underline="hover">
+                                            親ゴールを表示
+                                        </MuiLink>
+                                    </Grid>
+                                )}
+                                <Grid item xs={12} sm={6}>
+                                    <Typography variant="subtitle2" color="text.secondary">作成日</Typography>
+                                    <Typography variant="body1">{formatDate(goal.createdAt)}</Typography>
+                                </Grid>
+                            </Grid>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                    {goal.category && (
-                                        <div>
-                                            <h3 className="text-sm font-medium text-gray-500">カテゴリー</h3>
-                                            <p className="mt-1 text-base text-gray-900">{goal.category}</p>
-                                        </div>
-                                    )}
+                            <Box sx={{ mb: 3 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                    <Typography variant="subtitle2" color="text.secondary">進捗状況</Typography>
+                                    <Typography variant="body2" color="text.secondary">{goal.progress}%</Typography>
+                                </Box>
+                                <ProgressBar progress={goal.progress} />
+                            </Box>
 
-                                    {goal.targetDate && (
-                                        <div>
-                                            <h3 className="text-sm font-medium text-gray-500">目標日</h3>
-                                            <p className="mt-1 text-base text-gray-900">{formatDate(goal.targetDate)}</p>
-                                        </div>
-                                    )}
+                            <Paper variant="outlined" sx={{ p: 2, mb: 3, bgcolor: 'action.hover' }}>
+                                <Typography variant="subtitle2" sx={{ mb: 2 }}>進捗を更新</Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Slider
+                                        value={progressValue}
+                                        onChange={(_, newValue) => setProgressValue(newValue as number)}
+                                        aria-labelledby="progress-slider"
+                                        valueLabelDisplay="auto"
+                                        step={5}
+                                        marks
+                                        min={0}
+                                        max={100}
+                                        sx={{ flexGrow: 1 }}
+                                    />
+                                    <Typography variant="body1" sx={{ minWidth: '40px', textAlign: 'right' }}>{progressValue}%</Typography>
+                                    <Button
+                                        variant="contained"
+                                        size="small"
+                                        onClick={handleUpdateProgress}
+                                        disabled={isUpdatingProgress || goal.progress === progressValue}
+                                    >
+                                        {isUpdatingProgress ? <CircularProgress size={20} /> : '更新'}
+                                    </Button>
+                                </Box>
+                            </Paper>
 
-                                    {goal.parentGoalId && (
-                                        <div>
-                                            <h3 className="text-sm font-medium text-gray-500">親ゴール</h3>
-                                            <Link href={`/goals/${goal.parentGoalId}`} className="mt-1 text-base text-indigo-600 hover:text-indigo-500">
-                                                親ゴールを表示
-                                            </Link>
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <h3 className="text-sm font-medium text-gray-500">作成日</h3>
-                                        <p className="mt-1 text-base text-gray-900">{formatDate(goal.createdAt)}</p>
-                                    </div>
-                                </div>
-
-                                {/* 進捗バー */}
-                                <div className="mb-6">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <h3 className="text-sm font-medium text-gray-500">進捗状況</h3>
-                                        <span className="text-sm font-medium text-gray-900">{goal.progress}%</span>
-                                    </div>
-                                    <ProgressBar progress={goal.progress} />
-                                </div>
-
-                                {/* 進捗更新フォーム */}
-                                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                                    <h3 className="text-sm font-medium text-gray-700 mb-3">進捗を更新</h3>
-                                    <div className="flex items-center space-x-4">
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max="100"
-                                            step="5"
-                                            value={progressValue}
-                                            onChange={(e) => setProgressValue(parseInt(e.target.value))}
-                                            className="flex-grow"
-                                        />
-                                        <span className="text-sm font-medium text-gray-900 w-12">{progressValue}%</span>
-                                        <button
-                                            onClick={handleUpdateProgress}
-                                            disabled={isUpdatingProgress || goal.progress === progressValue}
-                                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+                                <Button variant="outlined" onClick={toggleEditMode}>編集</Button>
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <Button
+                                        variant="outlined"
+                                        color="inherit"
+                                        onClick={handleArchiveGoal}
+                                        disabled={goal.status === 'ARCHIVED'}
+                                    >
+                                        アーカイブ
+                                    </Button>
+                                    {deleteConfirmation ? (
+                                        <>
+                                            <Typography sx={{ alignSelf: 'center', mr: 1 }}>本当に削除しますか？</Typography>
+                                            <Button variant="outlined" size="small" onClick={() => setDeleteConfirmation(false)}>キャンセル</Button>
+                                            <Button variant="contained" color="error" size="small" onClick={handleDeleteGoal}>削除する</Button>
+                                        </>
+                                    ) : (
+                                        <Button
+                                            variant="contained"
+                                            color="error"
+                                            onClick={() => setDeleteConfirmation(true)}
                                         >
-                                            更新
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* アクションボタン */}
-                                <div className="flex justify-between mt-8">
-                                    <div>
-                                        <button
-                                            onClick={toggleEditMode}
-                                            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                        >
-                                            編集
-                                        </button>
-                                    </div>
-                                    <div className="space-x-3">
-                                        <button
-                                            onClick={handleArchiveGoal}
-                                            disabled={goal.status === 'ARCHIVED'}
-                                            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-                                        >
-                                            アーカイブ
-                                        </button>
-                                        {deleteConfirmation ? (
-                                            <>
-                                                <span className="text-sm text-gray-500 mr-2">本当に削除しますか？</span>
-                                                <button
-                                                    onClick={() => setDeleteConfirmation(false)}
-                                                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                                >
-                                                    キャンセル
-                                                </button>
-                                                <button
-                                                    onClick={handleDeleteGoal}
-                                                    className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                                >
-                                                    削除する
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <button
-                                                onClick={() => setDeleteConfirmation(true)}
-                                                className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                            >
-                                                削除
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </>
-                    )}
-                </div>
-
-                {/* サブゴール一覧 */}
-                {subGoals.length > 0 && (
-                    <div className="mt-8">
-                        <GoalList goals={subGoals} title="サブゴール" />
-                    </div>
+                                            削除
+                                        </Button>
+                                    )}
+                                </Box>
+                            </Box>
+                        </Box>
+                    </>
                 )}
+            </Paper>
 
-                {/* サブゴール追加ボタン */}
-                <div className="mt-6 text-center">
-                    <Link
-                        href={`/goals/create?parentGoalId=${goalId}`}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    >
-                        サブゴールを追加
-                    </Link>
-                </div>
-            </div>
-        </div>
+            {subGoals.length > 0 && (
+                <Box sx={{ mt: 4 }}>
+                    <GoalList goals={subGoals} title="サブゴール" />
+                </Box>
+            )}
+
+            <Box sx={{ mt: 4, textAlign: 'center' }}>
+                <Button
+                    component={Link}
+                    href={`/goals/create?parentGoalId=${goalId}`}
+                    variant="contained"
+                >
+                    サブゴールを追加
+                </Button>
+            </Box>
+        </Container>
     );
 }

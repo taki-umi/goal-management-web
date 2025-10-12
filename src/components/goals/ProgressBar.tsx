@@ -1,23 +1,33 @@
 'use client';
 
+import * as React from 'react';
+import LinearProgress, { LinearProgressProps } from '@mui/material/LinearProgress';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+
+function LinearProgressWithLabel(props: LinearProgressProps & { value: number }) {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Box sx={{ width: '100%', mr: 1 }}>
+        <LinearProgress variant="determinate" {...props} />
+      </Box>
+      <Box sx={{ minWidth: 35 }}>
+        <Typography variant="body2" color="text.secondary">{`${Math.round(
+          props.value,
+        )}%`}</Typography>
+      </Box>
+    </Box>
+  );
+}
+
 interface ProgressBarProps {
-    progress: number;
+  progress: number;
 }
 
 export default function ProgressBar({ progress }: ProgressBarProps) {
-    // 進捗に応じた色を決定
-    const getProgressColor = () => {
-        if (progress < 30) return 'bg-red-500';
-        if (progress < 70) return 'bg-yellow-500';
-        return 'bg-green-500';
-    };
-
-    return (
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div
-                className={`h-2.5 rounded-full ${getProgressColor()}`}
-                style={{ width: `${Math.min(progress, 100)}%` }}
-            ></div>
-        </div>
-    );
+  return (
+    <Box sx={{ width: '100%' }}>
+      <LinearProgressWithLabel value={progress} />
+    </Box>
+  );
 }

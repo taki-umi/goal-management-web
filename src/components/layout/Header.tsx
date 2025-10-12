@@ -1,181 +1,224 @@
 'use client';
 
+import * as React from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { usePathname } from 'next/navigation';
-import ThemeToggle from '@/components/ui/ThemeToggle';
-import { useState } from 'react';
+import { useTheme } from 'next-themes';
+
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Container from '@mui/material/Container';
+import Avatar from '@mui/material/Avatar';
+import Tooltip from '@mui/material/Tooltip';
+
+// Icons
+import MenuIcon from '@mui/icons-material/Menu';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
+
+const pages = [
+  { name: 'ダッシュボード', href: '/' },
+  { name: 'ゴール作成', href: '/goals/create' },
+];
 
 export default function Header() {
-    const { user, isAuthenticated, logout } = useAuth();
-    const pathname = usePathname();
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const pathname = usePathname();
+  const { resolvedTheme, setTheme } = useTheme();
 
-    // モバイルメニューの切り替え
-    const toggleMenu = () => {
-        setIsMenuOpen(!isMenuOpen);
-    };
+  const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
+  const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
 
-    // ログインページではヘッダーを表示しない
-    if (pathname === '/login') {
-        return null;
-    }
+  const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElNav(event.currentTarget);
+  };
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElUser(event.currentTarget);
+  };
 
-    return (
-        <header className="bg-background-light dark:bg-background-light shadow transition-colors duration-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between h-16">
-                    <div className="flex">
-                        <div className="flex-shrink-0 flex items-center">
-                            <Link href="/" className="text-xl font-bold text-primary-600 dark:text-primary-400">
-                                Goal Achieve
-                            </Link>
-                        </div>
-                        {isAuthenticated() && (
-                            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                                <Link
-                                    href="/"
-                                    className={`${pathname === '/'
-                                            ? 'border-primary-500 text-text-primary'
-                                            : 'border-transparent text-text-secondary hover:border-gray-300 hover:text-text-primary'
-                                        } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors`}
-                                >
-                                    ダッシュボード
-                                </Link>
-                                <Link
-                                    href="/goals/create"
-                                    className={`${pathname === '/goals/create'
-                                            ? 'border-primary-500 text-text-primary'
-                                            : 'border-transparent text-text-secondary hover:border-gray-300 hover:text-text-primary'
-                                        } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors`}
-                                >
-                                    ゴール作成
-                                </Link>
-                            </div>
-                        )}
-                    </div>
-                    <div className="flex items-center">
-                        {/* ダークモードトグル */}
-                        <div className="mr-4">
-                            <ThemeToggle />
-                        </div>
+  const handleCloseNavMenu = () => {
+    setAnchorElNav(null);
+  };
 
-                        {/* デスクトップ用ユーザーメニュー */}
-                        <div className="hidden sm:ml-6 sm:flex sm:items-center">
-                            {isAuthenticated() ? (
-                                <div className="flex items-center space-x-4">
-                                    <span className="text-sm font-medium text-text-primary">
-                                        {user?.username}
-                                    </span>
-                                    <button
-                                        onClick={logout}
-                                        className="btn-secondary"
-                                    >
-                                        ログアウト
-                                    </button>
-                                </div>
-                            ) : (
-                                <Link
-                                    href="/login"
-                                    className="btn-primary"
-                                >
-                                    ログイン
-                                </Link>
-                            )}
-                        </div>
+  const handleCloseUserMenu = () => {
+    setAnchorElUser(null);
+  };
 
-                        {/* モバイル用メニューボタン */}
-                        <div className="flex items-center sm:hidden">
-                            <button
-                                onClick={toggleMenu}
-                                className="inline-flex items-center justify-center p-2 rounded-md text-text-secondary hover:text-text-primary hover:bg-background-dark focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
-                                aria-expanded="false"
-                            >
-                                <span className="sr-only">メニューを開く</span>
-                                {isMenuOpen ? (
-                                    <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                ) : (
-                                    <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                                    </svg>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  const handleLogout = () => {
+    logout();
+    handleCloseUserMenu();
+  };
 
-            {/* モバイル用メニュー */}
-            <div className={`${isMenuOpen ? 'block' : 'hidden'} sm:hidden transition-all duration-200 ease-in-out`}>
-                <div className="pt-2 pb-3 space-y-1">
-                    {isAuthenticated() && (
-                        <>
-                            <Link
-                                href="/"
-                                className={`${pathname === '/'
-                                        ? 'bg-primary-50 dark:bg-primary-900 border-primary-500 text-primary-700 dark:text-primary-100'
-                                        : 'border-transparent text-text-secondary hover:bg-background-dark hover:border-gray-300 hover:text-text-primary'
-                                    } block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
-                                onClick={() => setIsMenuOpen(false)}
-                            >
-                                ダッシュボード
-                            </Link>
-                            <Link
-                                href="/goals/create"
-                                className={`${pathname === '/goals/create'
-                                        ? 'bg-primary-50 dark:bg-primary-900 border-primary-500 text-primary-700 dark:text-primary-100'
-                                        : 'border-transparent text-text-secondary hover:bg-background-dark hover:border-gray-300 hover:text-text-primary'
-                                    } block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
-                                onClick={() => setIsMenuOpen(false)}
-                            >
-                                ゴール作成
-                            </Link>
-                        </>
-                    )}
-                </div>
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  };
 
-                <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700">
-                    {isAuthenticated() ? (
-                        <>
-                            <div className="flex items-center px-4">
-                                <div className="flex-shrink-0">
-                                    <div className="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-800 flex items-center justify-center">
-                                        <span className="text-primary-600 dark:text-primary-200 font-medium">
-                                            {user?.username.charAt(0).toUpperCase()}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="ml-3">
-                                    <div className="text-base font-medium text-text-primary">{user?.username}</div>
-                                </div>
-                            </div>
-                            <div className="mt-3 space-y-1">
-                                <button
-                                    onClick={() => {
-                                        logout();
-                                        setIsMenuOpen(false);
-                                    }}
-                                    className="block w-full text-left px-4 py-2 text-base font-medium text-text-secondary hover:text-text-primary hover:bg-background-dark"
-                                >
-                                    ログアウト
-                                </button>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="px-4">
-                            <Link
-                                href="/login"
-                                onClick={() => setIsMenuOpen(false)}
-                                className="block text-center w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
-                            >
-                                ログイン
-                            </Link>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </header>
-    );
+  // ログインページではヘッダーを表示しない
+  if (pathname === '/login') {
+    return null;
+  }
+
+  return (
+    <AppBar position="static" color="default" elevation={1}>
+      <Container maxWidth="xl">
+        <Toolbar disableGutters>
+          {/* == Desktop Logo == */}
+          <Typography
+            variant="h6"
+            noWrap
+            component={Link}
+            href="/"
+            sx={{
+              mr: 2,
+              display: { xs: 'none', md: 'flex' },
+              fontFamily: 'monospace',
+              fontWeight: 700,
+              letterSpacing: '.1rem',
+              color: 'primary.main',
+              textDecoration: 'none',
+            }}
+          >
+            GOAL ACHIEVE
+          </Typography>
+
+          {/* == Mobile Menu == */}
+          {isAuthenticated() && (
+            <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
+              <IconButton
+                size="large"
+                aria-label="account of current user"
+                aria-controls="menu-appbar"
+                aria-haspopup="true"
+                onClick={handleOpenNavMenu}
+                color="inherit"
+              >
+                <MenuIcon />
+              </IconButton>
+              <Menu
+                id="menu-appbar"
+                anchorEl={anchorElNav}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'left',
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'left',
+                }}
+                open={Boolean(anchorElNav)}
+                onClose={handleCloseNavMenu}
+                sx={{ display: { xs: 'block', md: 'none' } }}
+              >
+                {pages.map((page) => (
+                  <MenuItem key={page.name} onClick={handleCloseNavMenu} component={Link} href={page.href}>
+                    <Typography textAlign="center">{page.name}</Typography>
+                  </MenuItem>
+                ))}
+              </Menu>
+            </Box>
+          )}
+
+          {/* == Mobile Logo == */}
+          <Typography
+            variant="h5"
+            noWrap
+            component={Link}
+            href="/"
+            sx={{
+              mr: 2,
+              display: { xs: 'flex', md: 'none' },
+              flexGrow: 1,
+              fontFamily: 'monospace',
+              fontWeight: 700,
+              letterSpacing: '.1rem',
+              color: 'primary.main',
+              textDecoration: 'none',
+            }}
+          >
+            GOAL
+          </Typography>
+
+          {/* == Desktop Menu == */}
+          {isAuthenticated() && (
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+              {pages.map((page) => (
+                <Button
+                  key={page.name}
+                  component={Link}
+                  href={page.href}
+                  onClick={handleCloseNavMenu}
+                  sx={{
+                    my: 2,
+                    color: pathname === page.href ? 'primary.main' : 'text.primary',
+                    display: 'block',
+                    borderBottom: pathname === page.href ? '2px solid' : 'none',
+                    borderColor: 'primary.main',
+                    borderRadius: 0,
+                  }}
+                >
+                  {page.name}
+                </Button>
+              ))}
+            </Box>
+          )}
+
+          {/* Spacer to push user menu to the right */}
+          {!isAuthenticated() && <Box sx={{ flexGrow: 1 }} />}
+
+          {/* == Right side items == */}
+          <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+            <Tooltip title={resolvedTheme === 'dark' ? 'ライトモードに切り替え' : 'ダークモードに切り替え'}>
+              <IconButton onClick={toggleTheme} color="inherit">
+                {resolvedTheme === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+              </IconButton>
+            </Tooltip>
+
+            {isAuthenticated() ? (
+              <Box sx={{ ml: 2 }}>
+                <Tooltip title="設定を開く">
+                  <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                    <Avatar alt={user?.username.toUpperCase()}>{user?.username.charAt(0).toUpperCase()}</Avatar>
+                  </IconButton>
+                </Tooltip>
+                <Menu
+                  sx={{ mt: '45px' }}
+                  id="menu-appbar-user"
+                  anchorEl={anchorElUser}
+                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  keepMounted
+                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  open={Boolean(anchorElUser)}
+                  onClose={handleCloseUserMenu}
+                >
+                  <MenuItem disabled>
+                    <Typography textAlign="center">{user?.username}</Typography>
+                  </MenuItem>
+                  <MenuItem onClick={handleLogout}>
+                    <Typography textAlign="center">ログアウト</Typography>
+                  </MenuItem>
+                </Menu>
+              </Box>
+            ) : (
+              <Button
+                component={Link}
+                href="/login"
+                variant="contained"
+                sx={{ ml: 2 }}
+              >
+                ログイン
+              </Button>
+            )}
+          </Box>
+        </Toolbar>
+      </Container>
+    </AppBar>
+  );
 }

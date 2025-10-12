@@ -3,6 +3,16 @@
 import { Goal, GoalStatus } from '@/types/goal';
 import GoalCard from './GoalCard';
 import React, { useState } from 'react';
+import {
+    Box,
+    Typography,
+    Grid,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
+    SelectChangeEvent
+} from '@mui/material';
 
 interface GoalListProps {
     goals: Goal[];
@@ -23,40 +33,47 @@ export default function GoalList({ goals, title = 'ゴール一覧' }: GoalListP
         { value: 'ARCHIVED', label: 'アーカイブ済み' },
     ];
 
+    const handleStatusChange = (event: SelectChangeEvent<GoalStatus | 'ALL'>) => {
+        setStatusFilter(event.target.value as GoalStatus | 'ALL');
+    };
+
     return (
-        <div>
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-                <div className="flex items-center space-x-2">
-                    <label htmlFor="status-filter" className="text-sm text-gray-600">
-                        ステータス:
-                    </label>
-                    <select
+        <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h5" component="h2" fontWeight="bold">
+                    {title}
+                </Typography>
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                    <InputLabel id="status-filter-label">ステータス</InputLabel>
+                    <Select
+                        labelId="status-filter-label"
                         id="status-filter"
                         value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value as GoalStatus | 'ALL')}
-                        className="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        label="ステータス"
+                        onChange={handleStatusChange}
                     >
                         {statusOptions.map(option => (
-                            <option key={option.value} value={option.value}>
+                            <MenuItem key={option.value} value={option.value}>
                                 {option.label}
-                            </option>
+                            </MenuItem>
                         ))}
-                    </select>
-                </div>
-            </div>
+                    </Select>
+                </FormControl>
+            </Box>
 
             {filteredGoals.length === 0 ? (
-                <div className="text-center py-8 bg-white rounded-lg shadow">
-                    <p className="text-gray-500">表示するゴールがありません</p>
-                </div>
+                <Box sx={{ textAlign: 'center', py: 8, bgcolor: 'background.paper', borderRadius: 1, boxShadow: 1 }}>
+                    <Typography color="text.secondary">表示するゴールがありません</Typography>
+                </Box>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Grid container spacing={3}>
                     {filteredGoals.map(goal => (
-                        <GoalCard key={goal.id} goal={goal} />
+                        <Grid item key={goal.id} xs={12} sm={6} md={4}>
+                            <GoalCard goal={goal} />
+                        </Grid>
                     ))}
-                </div>
+                </Grid>
             )}
-        </div>
+        </Box>
     );
 }

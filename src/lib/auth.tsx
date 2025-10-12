@@ -2,6 +2,8 @@
 
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { User, AuthContextType } from '@/types/auth';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 
 // 認証コンテキストの作成
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -55,7 +57,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     if (loading) {
-        return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+        return (
+            <Backdrop
+                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                open={true}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
+        );
     }
 
     return (
