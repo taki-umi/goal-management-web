@@ -5,7 +5,7 @@ import axios, { AxiosError } from 'axios';
  */
 export const getApiErrorMessage = (error: unknown): string => {
     if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError<any>;
+        const axiosError = error as AxiosError<{ message?: string; error?: { message?: string }; details?: string }>;
 
         // レスポンスがある場合
         if (axiosError.response) {
