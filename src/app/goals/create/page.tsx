@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { goalApi } from '@/lib/api/goals';
 import { CreateGoalParams } from '@/types/goal';
 import GoalForm from '@/components/goals/GoalForm';

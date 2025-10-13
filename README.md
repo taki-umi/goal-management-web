@@ -8,20 +8,44 @@ Goal Achieveは、ユーザーが個人の目標を設定し、進捗を管理�
 
 ### フロントエンド
 
-- **フレームワーク**: Next.js (App Routerを採用)
+- **フレームワーク**: Next.js 14 (App Router)
 - **言語**: TypeScript
-- **スタイリング**: Tailwind CSS
-- **フォーム処理**: TurboPack
-- **HTTPクライアント**: Axios
+- **スタイリング**: Material-UI (Tailwindより早くスタイリング出来そうだから)
+- **状態管理**: React Hooks (useState, useContext)
+- **HTTPクライアント**: Supabase Client
 - **アイコン**: React Icons
 - **日付操作**: Day.js
+- **デプロイ**: Vercel
 
-### バックエンド (既存)
+### バックエンド
 
-- **言語**: Kotlin
-- **フレームワーク**: Spring Boot
-- **データベース**: PostgreSQL (開発環境はH2 in-memory DB)
-- **API**: RESTful API
+- **BaaS**: Supabase (API Gateway & Lambdaより開発スピード早そうだから)
+  - PostgreSQL Database
+  - Authentication (メール/パスワード、OAuth)
+  - Row Level Security (RLS)
+  - Realtime Subscriptions
+  - Storage (オプション)
+- **代替案**: AWS Lambda + API Gateway (将来的な移行オプション)
+
+## 🎨 主要機能
+
+### 実装済み ✅
+
+- ダッシュボード画面
+- ゴール一覧表示
+- ゴール作成フォーム
+- ゴール詳細表示
+- 進捗バー表示
+- ステータス管理（ACTIVE, COMPLETED, ARCHIVED）
+
+### 実装予定 📅
+
+- Supabaseとの連携
+- リアルタイム進捗更新
+- ユーザー認証（Supabase Auth）
+- サブゴール管理
+- おすすめゴール提案
+- 分析・統計ダッシュボード
 
 ## 必要画面
 
@@ -150,17 +174,20 @@ goal-achieve-frontend/
 
 ## アプリケーション起動方法
 
-1.  **依存関係のインストール**
+1. **依存関係のインストール**
+
     ```bash
     npm install
     ```
 
-2.  **開発サーバーの起動**
+2. **開発サーバーの起動**
+
     ```bash
     npm run dev
     ```
-    ブラウザで http://localhost:3000 を開いてください。
+
+    ブラウザで <http://localhost:3000> を開いてください。
 
 <img width="1462" height="686" alt="image" src="https://github.com/user-attachments/assets/d7e0e984-54d0-42ed-bb22-3d94fb5f39c6" />
 
-開発環境：https://goal-management-web.vercel.app/
+開発環境：<https://goal-management-web.vercel.app/>

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 

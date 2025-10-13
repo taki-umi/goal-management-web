@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { goalApi } from '@/lib/api/goals';
 import { Goal, GoalStatus } from '@/types/goal';
-import { useAuth } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import GoalCard from '@/components/goals/GoalCard';
 import Header from '@/components/layout/Header';
 
@@ -29,7 +29,7 @@ export default function DashboardPage() {
                 try {
                     setIsLoading(true);
                     setError(null);
-                    const fetchedGoals = await goalApi.getGoalsByUserIdAndStatus(user.id, statusFilter);
+                    const fetchedGoals = await goalApi.getGoals(user.id, statusFilter);
                     setGoals(fetchedGoals);
                 } catch (err) {
                     setError('ゴールの取得に失敗しました。');

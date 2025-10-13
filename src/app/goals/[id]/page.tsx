@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/lib/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { Goal, UpdateGoalParams, GoalStatus } from '@/types/goal';
 import { goalApi } from '@/lib/api/goals';
 import ProgressBar from '@/components/goals/ProgressBar';
@@ -126,7 +126,7 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
         try {
             setIsUpdatingProgress(true);
             setError(null);
-            const updatedGoal = await goalApi.updateProgress(goalId, { progress: progressValue });
+            const updatedGoal = await goalApi.updateProgress(goalId, progressValue);
             setGoal(updatedGoal);
         } catch (err) {
             console.error('進捗更新エラー:', err);
