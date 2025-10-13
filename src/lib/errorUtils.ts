@@ -56,7 +56,7 @@ export const withRetry = async <T>(
     maxRetries: number = 3,
     delayMs: number = 1000
 ): Promise<T> => {
-    let lastError: any;
+    let lastError: unknown;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {

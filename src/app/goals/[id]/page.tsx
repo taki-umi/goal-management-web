@@ -4,7 +4,7 @@ import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { Goal, UpdateGoalParams } from '@/types/goal';
+import { Goal, UpdateGoalParams, GoalStatus } from '@/types/goal';
 import { goalApi } from '@/lib/api/goals';
 import ProgressBar from '@/components/goals/ProgressBar';
 import GoalList from '@/components/goals/GoalList';
@@ -14,7 +14,6 @@ import {
     Box,
     Typography,
     Paper,
-    Grid,
     Button,
     TextField,
     Select,
@@ -28,6 +27,7 @@ import {
     InputLabel,
     SelectChangeEvent,
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 
 
@@ -84,7 +84,7 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
     };
 
     const handleStatusChange = (event: SelectChangeEvent<string>) => {
-        setEditedGoal(prev => ({ ...prev, status: event.target.value }));
+        setEditedGoal(prev => ({ ...prev, status: event.target.value as GoalStatus }));
     };
 
 
@@ -231,7 +231,7 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
                 {isEditing ? (
                     <Box component="form" onSubmit={handleUpdateGoal} sx={{ p: 3 }}>
                         <Grid container spacing={3}>
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <TextField
                                     fullWidth
                                     required
@@ -241,7 +241,7 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
                                     onChange={handleEditChange}
                                 />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <TextField
                                     fullWidth
                                     multiline
@@ -252,7 +252,7 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
                                     onChange={handleEditChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <TextField
                                     fullWidth
                                     label="カテゴリー"
@@ -261,7 +261,7 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
                                     onChange={handleEditChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <TextField
                                     fullWidth
                                     type="date"
@@ -272,7 +272,7 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
                                     InputLabelProps={{ shrink: true }}
                                 />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <FormControl fullWidth>
                                     <InputLabel>ステータス</InputLabel>
                                     <Select
@@ -287,7 +287,7 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                            <Grid size={{ xs: 12 }} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                                 <Button variant="outlined" onClick={toggleEditMode}>キャンセル</Button>
                                 <Button type="submit" variant="contained" disabled={loading}>
                                     {loading ? <CircularProgress size={24} /> : '更新する'}
@@ -307,26 +307,26 @@ export default function GoalDetailPage({ params }: GoalDetailPageProps) {
 
                             <Grid container spacing={2} sx={{ mb: 3 }}>
                                 {goal.category && (
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
                                         <Typography variant="subtitle2" color="text.secondary">カテゴリー</Typography>
                                         <Typography variant="body1">{goal.category}</Typography>
                                     </Grid>
                                 )}
                                 {goal.targetDate && (
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
                                         <Typography variant="subtitle2" color="text.secondary">目標日</Typography>
                                         <Typography variant="body1">{formatDate(goal.targetDate)}</Typography>
                                     </Grid>
                                 )}
                                 {goal.parentGoalId && (
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
                                         <Typography variant="subtitle2" color="text.secondary">親ゴール</Typography>
                                         <MuiLink component={Link} href={`/goals/${goal.parentGoalId}`} underline="hover">
                                             親ゴールを表示
                                         </MuiLink>
                                     </Grid>
                                 )}
-                                <Grid item xs={12} sm={6}>
+                                <Grid size={{ xs: 12, sm: 6 }}>
                                     <Typography variant="subtitle2" color="text.secondary">作成日</Typography>
                                     <Typography variant="body1">{formatDate(goal.createdAt)}</Typography>
                                 </Grid>

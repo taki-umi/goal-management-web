@@ -68,7 +68,7 @@ export default function GoalList({ goals, title = 'ゴール一覧' }: GoalListP
             ) : (
                 <Grid container spacing={3}>
                     {filteredGoals.map(goal => (
-                        <Grid item key={goal.id} xs={12} sm={6} md={4}>
+                        <Grid key={goal.id} size={{ xs: 12, sm: 6, md: 4 }}>
                             <GoalCard goal={goal} />
                         </Grid>
                     ))}

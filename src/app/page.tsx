@@ -72,12 +72,12 @@ export default function DashboardPage() {
                     <Grid container spacing={3}>
                         {goals.length > 0 ? (
                             goals.map((goal) => (
-                                <Grid item key={goal.id} xs={12} sm={6} md={4}>
+                                <Grid key={goal.id} size={{ xs: 12, sm: 6, md: 4 }}>
                                     <GoalCard goal={goal} />
                                 </Grid>
                             ))
                         ) : (
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <Typography variant="body1" color="text.secondary" align="center" sx={{ mt: 8 }}>
                                     このステータスのゴールはありません。
                                 </Typography>
